@@ -7,17 +7,7 @@ const getProducts = async (name, price,description,category) => {
   // create a container for filter
   let filter = {};
   // if name exists, pass it to the filter container
-  if (name) {
-    filter.name = name;
-  }
-  // if rating exist, pass it into the filter container
-  if (price) {
-    filter.price = { $gt: price };
-  }
-  // if director exist, pass into the filter container
-  if (description) {
-    filter.description = description;
-  }
+ 
   if (category) {
     filter.category = category;
   }
@@ -26,6 +16,7 @@ const getProducts = async (name, price,description,category) => {
   const products = await Product.find(filter);
   return products;
 };
+
 
 // get one movie
 const getProduct = async (id) => {

@@ -29,8 +29,10 @@ app.get("/", (req, res) => {
 
 // import all the routes
 const productRouter = require("./routes/product");
+const categoriesRouter = require("./routes/categories");
 
 app.use("/products", productRouter);
+app.use("/categories", categoriesRouter);
 
 
 // start the server

@@ -36,6 +36,18 @@ router.get("/", async (req, res) => {
     });
   }
 });
+// router.get("/", async (req, res) => {
+//   try {
+//     const category = req.query.category;
+//     // use the getMovies from the controller to laod the movies data
+//     const categories = await getCategories(category);
+//     res.status(200).send(categories);
+//   } catch (error) {
+//     res.status(400).send({
+//       error: "Categories not found",
+//     });
+//   }
+// });
 
 // get one movie by id
 router.get("/:id", async (req, res) => {
