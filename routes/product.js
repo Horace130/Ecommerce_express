@@ -1,8 +1,8 @@
 const express = require("express");
-//create a router for movies
+const mongoose = require("mongoose");
+//create a router for products
 const router = express.Router();
 
-// import functions from controller
 const {
   getProducts,
   getProduct,
@@ -11,128 +11,136 @@ const {
   deleteProduct,
 } = require("../controllers/product");
 
-/* 
-  create the routes (CRUD)
-  GET /movies - get all the movies
-  GET /movies/:id - get one movie by id
-  POST /movies - add new movie
-  PUT /movies/:id"674ff0ab6f3f9414a02b3579" - update movie
-  DELETE /movies/:id - delete movie
-*/
+const { isValidUser, isAdmin } = require("../middleware/auth");
 
-// get all the movies. Pointing to /movies
+// get all the products. Pointing to /products
 router.get("/", async (req, res) => {
   try {
-    const name = req.query.name;
-    const price = req.query.price;
-    const description = req.query.description;
     const category = req.query.category;
-    // use the getMovies from the controller to laod the movies data
-    const products = await getProducts(name, price, description,category);
+    const page = req.query.page;
+    const per_page = req.query.per_page;
+    const products = await getProducts(category, page, per_page);
     res.status(200).send(products);
   } catch (error) {
     res.status(400).send({
-      error: "Product not found",
+      error: error._message,
     });
   }
 });
-// router.get("/", async (req, res) => {
-//   try {
-//     const category = req.query.category;
-//     // use the getMovies from the controller to laod the movies data
-//     const categories = await getCategories(category);
-//     res.status(200).send(categories);
-//   } catch (error) {
-//     res.status(400).send({
-//       error: "Categories not found",
-//     });
-//   }
-// });
 
-// get one movie by id
+// get one product by id
 router.get("/:id", async (req, res) => {
   try {
     const id = req.params.id;
+    // Validate the ID format before querying the database
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({
+        error: `Invalid ID format: "${id}". A valid MongoDB ObjectId is required.`,
+      });
+    }
     const product = await getProduct(id);
-    res.status(200).send(product);
+    if (product) {
+      res.status(200).send(product);
+    } else {
+      res.status(400).send("Product not Found");
+    }
   } catch (error) {
     res.status(400).send({
-      error: "Product not found",
+      error: error._message,
     });
   }
 });
 
-// add movie
-// POST http://localhost:5555/movies
-router.post("/", async (req, res) => {
+// add new product
+router.post("/", isAdmin, async (req, res) => {
   try {
-    // retrieve the data from req.body
+    // Retrieve the data from req.body
     const name = req.body.name;
     const description = req.body.description;
     const price = req.body.price;
     const category = req.body.category;
-    
-
-    // check for error
-    if (!name || !description || !price || !category) {
+    const image = req.body.image;
+    // Check for errors
+    if (!name || !price || !category) {
       return res.status(400).send({
-        error: "Required data is missing",
+        error: "Error: Required product data is missing!",
       });
     }
-
-    // pass in all the data to addNewMovie function
+    // If no errors, pass in all the data to addNewProduct function from controller
     const newProduct = await addNewProduct(
       name,
       description,
       price,
-      category
+      category,
+      image
     );
     res.status(200).send(newProduct);
   } catch (error) {
-    // if there is an error, return the error code
+    console.log(error);
+    // If there is an error, return the error code
     res.status(400).send({
-      error: "Product Can't Add",
+      error: error._message,
     });
   }
 });
 
-// update movie
-// PUT http://localhost:5555/movies/9kdm40ikd93k300dkd3o
-router.put("/:id", async (req, res) => {
+// 4
+router.put("/:id", isAdmin, async (req, res) => {
   try {
+    // Retrieve id from URL
     const id = req.params.id;
+    // Retrieve the data from req.body
     const name = req.body.name;
     const description = req.body.description;
     const price = req.body.price;
     const category = req.body.category;
-    
-    // pass in the data into the updateMovie function
+    const image = req.body.image;
+
+    // Pass in the data into the updateProduct function
     const updatedProduct = await updateProduct(
       id,
       name,
       description,
       price,
-      category
+      category,
+      image
     );
     res.status(200).send(updatedProduct);
   } catch (error) {
+    // If there is an error, return the error code
     res.status(400).send({
-      error: "Product Couldn't Update",
+      error: error._message,
     });
   }
 });
 
-// delete movie
-// DELETE http://localhost:5555/movies/9kdm40ikd93k300dkd3o
-router.delete("/:id", async (req, res) => {
+// 5
+router.delete("/:id", isAdmin, async (req, res) => {
   try {
+    // Retrieve the id from the URL
     const id = req.params.id;
-    // trigger the deleteMovie function
-    await deleteProduct(id);
+    // Validate the ID format before querying the database
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({
+        error: `Invalid ID format: "${id}". A valid MongoDB ObjectId is required.`,
+      });
+    }
+    const product = await getProduct(id);
+    // If the product does not exist
+    if (!product) {
+      /* !product because it is returning either a single object or null */
+      return res.status(404).send({
+        error: `Error: No match for a product found with the id "${id}".`,
+      });
+    }
+    // Trigger the deleteProduct function
+    const status = await deleteProduct(id);
     res.status(200).send({
-      message: `Product with the provided id #${id} has been deleted`,
+      message: `Alert: Movie with the provided id #${id} has been deleted`,
     });
   } catch (error) {
+    console.log(error);
+    // If there is an error, return the error code
     res.status(400).send({
       error: error._message,
     });
