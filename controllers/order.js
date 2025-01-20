@@ -38,8 +38,8 @@ const addNewOrder = async (
       //   "https://opulent-space-system-q64rvpjvcwgw-3000.app.github.dev/verify-payment",
       // redirect_url:
       //   "https://opulent-space-system-q64rvpjvcwgw-3000.app.github.dev/verify-payment",
-      callback_url: "http://localhost:3000/verify-payment",
-      redirect_url: "http://localhost:3000/verify-payment",
+      callback_url: process.env.FRONTEND_URL + "/verify-payment",
+      redirect_url: process.env.FRONTEND_URL + "/verify-payment",
     },
     {
       auth: {
